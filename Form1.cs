@@ -1,28 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace OAnQuan
 {
     public partial class Form1 : Form
     {
-
         public Game Game;
 
+        private Button[] Board;
+        private int distributeTimerCounter;
+        private int finalCollecTimerCounter;
         private Color player1Color = Color.LightBlue;
         private Color player2Color = Color.MistyRose;
 
         private string[] playerNames;
-
-        private int distributeTimerCounter;
-        private int finalCollecTimerCounter;
-
-        Button[] Board;
-
         public Form1()
         {
             InitializeComponent();
@@ -36,22 +28,6 @@ namespace OAnQuan
             SetGame(new Game());
             GameModelToUI();
         }
-
-        public void SetGame(Game game)
-        {
-            Game = game;
-        }
-
-        private string StonesToString(int numberOfStones, char symbol, bool addSpace = false, bool addNumericValue = false)
-        {
-            var output = "".PadRight(Math.Abs(numberOfStones), symbol);
-            output = (addNumericValue ? "(" + Math.Abs(numberOfStones) + ") " : "") + output;
-            output = (numberOfStones < 0 ? "Nợ " : "") + output;
-            if (addSpace)
-                return output.Replace(symbol + "", symbol + " ");
-            return output;
-        }
-
 
         public void GameModelToUI()
         {
@@ -67,7 +43,6 @@ namespace OAnQuan
             label9.Text = Game.Players[1].Scores.ToString();
 
             label16.Text = StonesToString(Game.StonesInHand, '•', false, true);
-
 
             for (int i = 0; i < Board.Length; i++)
             {
@@ -93,77 +68,60 @@ namespace OAnQuan
             UpdateHighlightedCell();
         }
 
-        #region Game State
-        
-        private void UpdateGameState()
+        public void SetGame(Game game)
         {
-            switch (Game.State)
+            Game = game;
+        }
+
+        public void UpdateHighlightedCell()
+        {
+            for (int i = 0; i < Board.Length; i++)
             {
-                case Game.Status.NEW:
-                    NewGame();
-                    break;
-                case Game.Status.PLAYER_SELECTING:
-                    label19.Text = playerNames[Game.CurrentPlayer] + " chọn một mẫu ruộng để điều quân.";
-                    break;
-                case Game.Status.PLAYER_MOVING:
-                    label19.Text = playerNames[Game.CurrentPlayer] + " đang điều quân...";
-                    break;
-                case Game.Status.WAITING_FOR_FINAL_COLLECTION:
-                    WaitForFinalCollection();
-                    break;
-                case Game.Status.OVER:
-                    GameOver();
-                    break;
-                case Game.Status.PLAYER_SIDE_EMPTY:
-                    WaitForRefilling();
-                    break;
-                default:
-                    label19.Text = "Undefined";
-                    break;
+                if (i == Game.SelectedCellIndex && !Game.IsPlayerMoving)
+                {
+                    //Board[i].FlatAppearance.BorderColor = Color.DarkRed;
+                    //Board[i].FlatAppearance.BorderSize = 2;
+                    if (Game.CurrentPlayer == 0)
+                        Board[i].BackColor = player1Color;
+                    else
+                        Board[i].BackColor = player2Color;
+                }
+                else
+                if (i == Game.CurrentCellIndex)
+                {
+                    //Board[i].FlatAppearance.BorderColor = Color.DarkRed;
+                    //Board[i].FlatAppearance.BorderSize = 1;
+                    if (Game.CurrentPlayer == 0)
+                        Board[i].BackColor = player1Color;
+                    else
+                        Board[i].BackColor = player2Color;
+                }
+                else
+                {
+                    //Board[i].FlatAppearance.BorderColor = Color.Black;
+                    //Board[i].FlatAppearance.BorderSize = 0;
+                    Board[i].BackColor = this.BackColor;
+                }
             }
         }
 
-        private void WaitForFinalCollection()
+        private void button10_Click(object sender, EventArgs e)
         {
-            label18.Text = "Hết quan, tàn dân, thu quân, bán ruộng!";
-            label19.Text = "(3 s)";
-            finalCollecTimerCounter = 0;
-            timer3.Enabled = true;
-            timer3.Start();
+            Game.SelectCell(9);
+            UpdateHighlightedCell();
         }
 
-        private void NewGame()
+        private void button11_Click(object sender, EventArgs e)
         {
-            button13.Text = "Điều Quân";
-            label18.Text = "Khai cuộc!";
-            label19.Text = playerNames[Game.CurrentPlayer] + " đi trước." + Environment.NewLine +
-                "Chọn một mẫu ruộng để điều quân.";
+            Game.SelectCell(10);
+            UpdateHighlightedCell();
         }
 
-        private void GameOver()
+        private void button12_Click(object sender, EventArgs e)
         {
-            button13.Text = "Đánh Trận Mới";
-            label18.Text = "Tàn cuộc!";
-            label19.Text = (Game.Players[0].Scores > Game.Players[1].Scores) 
-                ? playerNames[0] + " thắng!" 
-                : (Game.Players[0].Scores == Game.Players[1].Scores) 
-                ? "Hòa" : playerNames[1] + " thắng!";
-            MessageBox.Show(label19.Text, "Tàn Cuộc", 
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Game.SelectCell(11);
+            UpdateHighlightedCell();
         }
-
-        private void WaitForRefilling()
-        {
-            label19.Text = playerNames[Game.CurrentPlayer] + " đã hết quân." + Environment.NewLine + "Đặt lại quân vào ruộng để đi tiếp.";
-            button14.Text = "Đặt Lại Quân" + Environment.NewLine + "(3 s)";
-            button14.Visible = true;
-            button13.Enabled = false;
-            distributeTimerCounter = 0;
-            timer2.Enabled = true;
-            timer2.Start();
-        }
-
-        #endregion
 
         private void button13_Click(object sender, EventArgs e)
         {
@@ -172,12 +130,18 @@ namespace OAnQuan
                 Game = new Game();
                 GameModelToUI();
                 return;
-            } 
+            }
 
             Game.BeginMove();
             timer1.Enabled = true;
             timer1.Start();
         }
+
+        private void button14_Click_1(object sender, EventArgs e)
+        {
+            RefillNow();
+        }
+
         private void button2_Click(object sender, EventArgs e)
         {
             Game.SelectCell(1);
@@ -220,69 +184,6 @@ namespace OAnQuan
             UpdateHighlightedCell();
         }
 
-        private void button10_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(9);
-            UpdateHighlightedCell();
-        }
-
-        private void button11_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(10);
-            UpdateHighlightedCell();
-        }
-
-        private void button12_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(11);
-            UpdateHighlightedCell();
-        }
-
-        public void UpdateHighlightedCell()
-        {
-            for (int i = 0; i < Board.Length; i++)
-            {
-                if (i == Game.SelectedCellIndex && !Game.IsPlayerMoving)
-                {
-                    //Board[i].FlatAppearance.BorderColor = Color.DarkRed;
-                    //Board[i].FlatAppearance.BorderSize = 2;
-                    if (Game.CurrentPlayer == 0)
-                        Board[i].BackColor = player1Color;
-                    else
-                        Board[i].BackColor = player2Color;
-                }
-                else
-                if (i == Game.CurrentCellIndex)
-                {
-                    //Board[i].FlatAppearance.BorderColor = Color.DarkRed;
-                    //Board[i].FlatAppearance.BorderSize = 1;
-                    if (Game.CurrentPlayer == 0)
-                        Board[i].BackColor = player1Color;
-                    else
-                        Board[i].BackColor = player2Color;
-                }
-                else
-                {
-                    //Board[i].FlatAppearance.BorderColor = Color.Black;
-                    //Board[i].FlatAppearance.BorderSize = 0;
-                    Board[i].BackColor = this.BackColor;
-                }
-            }
-        }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            Game.Step();
-            GameModelToUI();
-            if (!Game.IsPlayerMoving)
-                timer1.Stop();
-        }
-
-        private void button14_Click_1(object sender, EventArgs e)
-        {
-            RefillNow();
-        }
-
         private void RefillNow()
         {
             button14.Visible = false;
@@ -291,6 +192,98 @@ namespace OAnQuan
             GameModelToUI();
         }
 
+        private string StonesToString(int numberOfStones, char symbol, bool addSpace = false, bool addNumericValue = false)
+        {
+            var output = "".PadRight(Math.Abs(numberOfStones), symbol);
+            output = (addNumericValue ? "(" + Math.Abs(numberOfStones) + ") " : "") + output;
+            output = (numberOfStones < 0 ? "Nợ " : "") + output;
+            if (addSpace)
+                return output.Replace(symbol + "", symbol + " ");
+            return output;
+        }
+        #region Game State
+
+        private void GameOver()
+        {
+            button13.Text = "Đánh Trận Mới";
+            label18.Text = "Tàn cuộc!";
+            label19.Text = (Game.Players[0].Scores > Game.Players[1].Scores)
+                ? playerNames[0] + " thắng!"
+                : (Game.Players[0].Scores == Game.Players[1].Scores)
+                ? "Hòa" : playerNames[1] + " thắng!";
+            MessageBox.Show(label19.Text, "Tàn Cuộc",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void NewGame()
+        {
+            button13.Text = "Điều Quân";
+            label18.Text = "Khai cuộc!";
+            label19.Text = playerNames[Game.CurrentPlayer] + " đi trước." + Environment.NewLine +
+                "Chọn một mẫu ruộng để điều quân.";
+        }
+
+        private void UpdateGameState()
+        {
+            switch (Game.State)
+            {
+                case Game.Status.NEW:
+                    NewGame();
+                    break;
+
+                case Game.Status.PLAYER_SELECTING:
+                    label19.Text = playerNames[Game.CurrentPlayer] + " chọn một mẫu ruộng để điều quân.";
+                    break;
+
+                case Game.Status.PLAYER_MOVING:
+                    label19.Text = playerNames[Game.CurrentPlayer] + " đang điều quân...";
+                    break;
+
+                case Game.Status.WAITING_FOR_FINAL_COLLECTION:
+                    WaitForFinalCollection();
+                    break;
+
+                case Game.Status.OVER:
+                    GameOver();
+                    break;
+
+                case Game.Status.PLAYER_SIDE_EMPTY:
+                    WaitForRefilling();
+                    break;
+
+                default:
+                    label19.Text = "Undefined";
+                    break;
+            }
+        }
+
+        private void WaitForFinalCollection()
+        {
+            label18.Text = "Hết quan, tàn dân, thu quân, bán ruộng!";
+            label19.Text = "(3 s)";
+            finalCollecTimerCounter = 0;
+            timer3.Enabled = true;
+            timer3.Start();
+        }
+        private void WaitForRefilling()
+        {
+            label19.Text = playerNames[Game.CurrentPlayer] + " đã hết quân." + Environment.NewLine + "Đặt lại quân vào ruộng để đi tiếp.";
+            button14.Text = "Đặt Lại Quân" + Environment.NewLine + "(3 s)";
+            button14.Visible = true;
+            button13.Enabled = false;
+            distributeTimerCounter = 0;
+            timer2.Enabled = true;
+            timer2.Start();
+        }
+
+        #endregion Game State
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            Game.Step();
+            GameModelToUI();
+            if (!Game.IsPlayerMoving)
+                timer1.Stop();
+        }
         private void timer2_Tick(object sender, EventArgs e)
         {
             distributeTimerCounter++;

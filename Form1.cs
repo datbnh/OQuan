@@ -10,6 +10,7 @@ namespace OAnQuan
 {
     public partial class Form1 : Form
     {
+
         public Game Game;
 
         private Color player1Color = Color.LightBlue;
@@ -65,7 +66,6 @@ namespace OAnQuan
             label13.Text = Game.Players[1].LargeStones.ToString();
             label9.Text = Game.Players[1].Scores.ToString();
 
-            label18.Text = playerNames[Game.CurrentPlayer] + " đi";
             label16.Text = StonesToString(Game.StonesInHand, '•', false, true);
 
 
@@ -88,10 +88,19 @@ namespace OAnQuan
                 tableLayoutPanel2.BackColor = player2Color;
             }
 
+            label18.Text = playerNames[Game.CurrentPlayer] + " Đi";
+            UpdateGameState();
+            UpdateHighlightedCell();
+        }
+
+        #region Game State
+        
+        private void UpdateGameState()
+        {
             switch (Game.State)
             {
                 case Game.Status.NEW:
-                    label19.Text = "Khai cuộc!";
+                    NewGame();
                     break;
                 case Game.Status.PLAYER_SELECTING:
                     label19.Text = playerNames[Game.CurrentPlayer] + " chọn một mẫu ruộng để điều quân.";
@@ -100,40 +109,52 @@ namespace OAnQuan
                     label19.Text = playerNames[Game.CurrentPlayer] + " đang điều quân...";
                     break;
                 case Game.Status.WAITING_FOR_FINAL_COLLECTION:
-                    label19.Text = "Hết quan, tàn dân, thu quân, bán ruộng! + (" + 3 + " s)";
-                    finalCollecTimerCounter = 0;
-                    timer3.Enabled = true;
-                    timer3.Start();
+                    WaitForFinalCollection();
                     break;
                 case Game.Status.OVER:
-                    button13.Enabled = false;
-                    label19.Text = "Tàn cuộc!";
                     GameOver();
                     break;
                 case Game.Status.PLAYER_SIDE_EMPTY:
-                    label19.Text = playerNames[Game.CurrentPlayer] + " đã hết quân. Đặt lại quân vào ruộng để đi tiếp.";
-                    WaitToRefill();
+                    WaitForRefilling();
                     break;
                 default:
                     label19.Text = "Undefined";
                     break;
             }
+        }
 
-            UpdateHighlightedCell();
+        private void WaitForFinalCollection()
+        {
+            label18.Text = "Hết quan, tàn dân, thu quân, bán ruộng!";
+            label19.Text = "(3 s)";
+            finalCollecTimerCounter = 0;
+            timer3.Enabled = true;
+            timer3.Start();
+        }
+
+        private void NewGame()
+        {
+            button13.Text = "Điều Quân";
+            label18.Text = "Khai cuộc!";
+            label19.Text = playerNames[Game.CurrentPlayer] + " đi trước." + Environment.NewLine +
+                "Chọn một mẫu ruộng để điều quân.";
         }
 
         private void GameOver()
         {
-            if (Game.Players[0].Scores > Game.Players[1].Scores)
-                MessageBox.Show(playerNames[0] + " thắng!");
-            else if (Game.Players[0].Scores == Game.Players[1].Scores)
-                MessageBox.Show("Hòa!");
-            else
-                MessageBox.Show(playerNames[1] + " thắng!");
+            button13.Text = "Đánh Trận Mới";
+            label18.Text = "Tàn cuộc!";
+            label19.Text = (Game.Players[0].Scores > Game.Players[1].Scores) 
+                ? playerNames[0] + " thắng!" 
+                : (Game.Players[0].Scores == Game.Players[1].Scores) 
+                ? "Hòa" : playerNames[1] + " thắng!";
+            MessageBox.Show(label19.Text, "Tàn Cuộc", 
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void WaitToRefill()
+        private void WaitForRefilling()
         {
+            label19.Text = playerNames[Game.CurrentPlayer] + " đã hết quân." + Environment.NewLine + "Đặt lại quân vào ruộng để đi tiếp.";
             button14.Text = "Đặt Lại Quân" + Environment.NewLine + "(3 s)";
             button14.Visible = true;
             button13.Enabled = false;
@@ -142,8 +163,17 @@ namespace OAnQuan
             timer2.Start();
         }
 
+        #endregion
+
         private void button13_Click(object sender, EventArgs e)
         {
+            if (Game.State == Game.Status.OVER)
+            {
+                Game = new Game();
+                GameModelToUI();
+                return;
+            } 
+
             Game.BeginMove();
             timer1.Enabled = true;
             timer1.Start();
@@ -276,7 +306,7 @@ namespace OAnQuan
         private void timer3_Tick(object sender, EventArgs e)
         {
             finalCollecTimerCounter++;
-            label19.Text = "Hết quan, tàn dân, thu quân, bán ruộng! + (" + (3 - finalCollecTimerCounter) + " s)";
+            label19.Text = "(" + (3 - finalCollecTimerCounter) + " s)";
             if (finalCollecTimerCounter >= 3)
             {
                 timer3.Stop();

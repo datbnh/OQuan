@@ -31,9 +31,9 @@ namespace OAnQuan
         {
             PlayerNumber = 2;
             Players = new Player[2] { new Player(), new Player() };
-            Board = new int[12] { 0,  0, 0, 1, 0, 0,   
-                                  3,  0, 5, 0, 5, 0 };
-            LargeStones = new int[2] { 0, 0 };
+            Board = new int[12] { 0,  5, 5, 5, 5, 5,
+                                  0,  5, 5, 5, 5, 5 };
+            LargeStones = new int[2] { 1, 1 };
             SetCurrentPlayer(0);
             State = Status.NEW;
             IsCollectingImatureMandarinAllowed = true;
@@ -59,6 +59,7 @@ namespace OAnQuan
 
             CurrentCellIndex = SelectedCellIndex;
             PickUp(CurrentCellIndex);
+            State = Status.PLAYER_MOVING;
             IsPlayerMoving = true;
         }
 
@@ -139,8 +140,8 @@ namespace OAnQuan
                 for (int j = 1; j < NUMBER_OF_CELL_PER_PLAYER; j++)
                 // starting from 1, skipping "quan" cell
                 {
-                    Players[i].SmallStones += Board[(i + 1) * j];
-                    Board[(i + 1) * j] = 0;
+                    Players[i].SmallStones += Board[(i * NUMBER_OF_CELL_PER_PLAYER) + j];
+                    Board[(i * NUMBER_OF_CELL_PER_PLAYER) + j] = 0;
                 }
             }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Text;
 using System.Windows.Forms;
 
 namespace OAnQuan
@@ -21,14 +22,10 @@ namespace OAnQuan
             playerNames = new string[2] { "Bên Xanh", "Bên Đỏ" };
             Board = new Button[12] {button1, button2, button3, button4, button5, button6,
             button7, button8, button9, button10, button11, button12};
-            //for (int i = 0; i < Board.Length; i++)
-            //{
-            //    Board[i].Font.FontFamily = new FontFamily(Board[i].Font.FontFamily.Name, )
-            //}
             SetGame(new Game() { CurrentPlayer = 1 });
             GameModelToUI();
 
-            label17.Text = GameAI.PredictBestMove(Game, 2) + "";
+            //label17.Text = GameAI.PredictBestMove(Game, 2) + "";
         }
 
         public void GameModelToUI()
@@ -36,23 +33,35 @@ namespace OAnQuan
             if (Game == null)
                 return;
 
-            label3.Text = StonesToString(Game.Players[0].SmallStones, '•', false, true);
-            label5.Text = Game.Players[0].LargeStones.ToString();
+
+            var v = Game.Players[0].SmallStones;
+            label3.Text = SmallStonesToString(Math.Abs(v));
+            label22.Text = (v < 0 ? "Nợ " : "") + Math.Abs(v).ToString();
+
+            v = Game.Players[0].LargeStones;
+            label5.Text = v > 0 ? "•" : "";
+            label23.Text = v.ToString();
             label7.Text = Game.Players[0].Scores.ToString();
 
-            label12.Text = StonesToString(Game.Players[1].SmallStones, '•', false, true);
-            label13.Text = Game.Players[1].LargeStones.ToString();
+            v = Game.Players[1].SmallStones;
+            label12.Text = SmallStonesToString(Math.Abs(v));
+            label20.Text = (v < 0 ? "Nợ " : "") + Math.Abs(v).ToString();
+
+            v = Game.Players[1].LargeStones;
+            label13.Text = v > 0 ? "•" : "";
+            label21.Text = v.ToString();
             label9.Text = Game.Players[1].Scores.ToString();
 
-            label16.Text = StonesToString(Game.StonesInHand, '•', false, true);
+            v = Game.StonesInHand;
+            label16.Text = SmallStonesToString(v) + " " + v.ToString();
 
             for (int i = 0; i < Board.Length; i++)
             {
-                Board[i].Text = StonesToString(Game.Board[i], '•');
+                Board[i].Text = SmallStonesToString(Game.Board[i]);// StonesToString(Game.Board[i], '•');
             }
 
-            Board[0].Text = StonesToString(Game.LargeStones[0], '❿') + Board[0].Text;
-            Board[6].Text = StonesToString(Game.LargeStones[1], '❿') + Board[6].Text;
+            Board[0].Text = Game.LargeStones[0] > 0 ? "•" : "" + Board[0].Text;
+            Board[6].Text = Game.LargeStones[1] > 0 ? "•" : "" + Board[6].Text;
 
             if (Game.CurrentPlayer == 0)
             {
@@ -81,8 +90,6 @@ namespace OAnQuan
             {
                 if (i == Game.SelectedCellIndex && !Game.IsPlayerMoving)
                 {
-                    //Board[i].FlatAppearance.BorderColor = Color.DarkRed;
-                    //Board[i].FlatAppearance.BorderSize = 2;
                     if (Game.CurrentPlayer == 0)
                         Board[i].BackColor = player1Color;
                     else
@@ -91,8 +98,6 @@ namespace OAnQuan
                 else
                 if (i == Game.CurrentCellIndex)
                 {
-                    //Board[i].FlatAppearance.BorderColor = Color.DarkRed;
-                    //Board[i].FlatAppearance.BorderSize = 1;
                     if (Game.CurrentPlayer == 0)
                         Board[i].BackColor = player1Color;
                     else
@@ -100,9 +105,7 @@ namespace OAnQuan
                 }
                 else
                 {
-                    //Board[i].FlatAppearance.BorderColor = Color.Black;
-                    //Board[i].FlatAppearance.BorderSize = 0;
-                    Board[i].BackColor = this.BackColor;
+                    Board[i].BackColor = Color.White;
                 }
             }
         }
@@ -194,15 +197,47 @@ namespace OAnQuan
             GameModelToUI();
         }
 
-        private string StonesToString(int numberOfStones, char symbol, bool addSpace = false, bool addNumericValue = false)
+        //private string StonesToString(int numberOfStones, char symbol, bool addSpace = false, bool addNumericValue = false)
+        //{
+        //    var output = "".PadRight(Math.Abs(numberOfStones), symbol);
+        //    output = (addNumericValue ? "(" + Math.Abs(numberOfStones) + ") " : "") + output;
+        //    output = (numberOfStones < 0 ? "Nợ " : "") + output;
+        //    if (addSpace)
+        //        return output.Replace(symbol + "", symbol + " ");
+        //    return output;
+        //}
+
+        private string SmallStonesToString(int numberOfStones)
         {
-            var output = "".PadRight(Math.Abs(numberOfStones), symbol);
-            output = (addNumericValue ? "(" + Math.Abs(numberOfStones) + ") " : "") + output;
-            output = (numberOfStones < 0 ? "Nợ " : "") + output;
-            if (addSpace)
-                return output.Replace(symbol + "", symbol + " ");
-            return output;
+            StringBuilder sb = new StringBuilder();
+
+            var d = numberOfStones / 5;
+            var r = numberOfStones % 5;
+
+            if (d > 0)
+                sb.Append("".PadLeft(d, '⁙'));
+            if (r > 0)
+                switch (r)
+                {
+                    case 1:
+                        sb.Append("‧");
+                        break;
+                    case 2:
+                        sb.Append("᛬");
+                        break;
+                    case 3:
+                        sb.Append("⁖");
+                        break;
+                    case 4:
+                        sb.Append("⁘");
+                        break;
+                    default:
+                        break;
+                }
+
+            return sb.ToString();
         }
+
         #region Game State
 
         private void GameOver()
@@ -261,7 +296,7 @@ namespace OAnQuan
 
         private void WaitForFinalCollection()
         {
-            label18.Text = "Hết quan, tàn dân, thu quân, bán ruộng!";
+            label18.Text = "Hết quan, tàn dân, " + Environment.NewLine + "thu quân, bán ruộng!";
             label19.Text = "(3 s)";
             finalCollecTimerCounter = 0;
             timer3.Enabled = true;
@@ -286,7 +321,7 @@ namespace OAnQuan
             if (!Game.IsPlayerMoving)
             {
                 timer1.Stop();
-                label17.Text = GameAI.PredictBestMove(Game, 2) + "";
+                //label17.Text = GameAI.PredictBestMove(Game, 2) + "";
             }
 
         }

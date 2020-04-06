@@ -25,8 +25,10 @@ namespace OAnQuan
             //{
             //    Board[i].Font.FontFamily = new FontFamily(Board[i].Font.FontFamily.Name, )
             //}
-            SetGame(new Game());
+            SetGame(new Game() { CurrentPlayer = 1 });
             GameModelToUI();
+
+            label17.Text = GameAI.PredictBestMove(Game, 2) + "";
         }
 
         public void GameModelToUI()
@@ -247,7 +249,7 @@ namespace OAnQuan
                     GameOver();
                     break;
 
-                case Game.Status.PLAYER_SIDE_EMPTY:
+                case Game.Status.WAITING_FOR_REFILLING:
                     WaitForRefilling();
                     break;
 
@@ -282,7 +284,11 @@ namespace OAnQuan
             Game.Step();
             GameModelToUI();
             if (!Game.IsPlayerMoving)
+            {
                 timer1.Stop();
+                label17.Text = GameAI.PredictBestMove(Game, 2) + "";
+            }
+
         }
         private void timer2_Tick(object sender, EventArgs e)
         {

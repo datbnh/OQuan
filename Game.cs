@@ -46,7 +46,7 @@ namespace OAnQuan
             PLAYER_MOVING = 2,
             WAITING_FOR_FINAL_COLLECTION = 3,
             OVER = 4,
-            PLAYER_SIDE_EMPTY = 5,
+            WAITING_FOR_REFILLING = 5,
         }
 
         public void BeginMove()
@@ -70,12 +70,11 @@ namespace OAnQuan
 
         public Game Clone()
         {
-            return new Game()
+            var clonedGame = new Game()
             {
                 PlayerNumber = this.PlayerNumber,
-                Players = this.Players,
-                Board = this.Board,
-                LargeStones = this.LargeStones,
+                Board = (int[])this.Board.Clone(),
+                LargeStones = (int[])this.LargeStones.Clone(),
                 CurrentCellIndex = this.CurrentCellIndex,
                 SelectedCellIndex = this.SelectedCellIndex,
                 CurrentPlayer = this.CurrentPlayer,
@@ -83,6 +82,13 @@ namespace OAnQuan
                 IsPlayerMoving = this.IsPlayerMoving,
                 StonesInHand = this.StonesInHand,
             };
+
+            clonedGame.Players = new Player[clonedGame.PlayerNumber];
+            for (int i = 0; i < clonedGame.PlayerNumber; i++)
+            {
+                clonedGame.Players[i] = this.Players[i].Clone();
+            }
+            return clonedGame;
         }
 
         public void Collect()
@@ -258,7 +264,7 @@ namespace OAnQuan
                 }
 
                 if (isCurrentPlayerHavingAllEmptyCell)
-                    State = Status.PLAYER_SIDE_EMPTY;
+                    State = Status.WAITING_FOR_REFILLING;
                 else
                     State = Status.PLAYER_SELECTING;
             }
@@ -268,6 +274,35 @@ namespace OAnQuan
         {
             return LargeStones[playerIndex] * LARGE_STONE_VALUE +
                 Board[playerIndex * NUMBER_OF_CELL_PER_PLAYER] * SMALL_STONE_VALUE;
+        }
+
+        public void PrintBoard()
+        {
+            Console.WriteLine("---------------------------");
+            Console.Write("    ");
+            for (int i = 1; i < NUMBER_OF_CELL_PER_PLAYER; i++)
+            {
+                Console.Write(Board[i].ToString("0 ").PadLeft(4, ' '));
+            }
+            Console.WriteLine();
+            Console.Write(LargeStones[0] + "+");
+            Console.Write(Board[NUMBER_OF_CELL_PER_PLAYER].ToString("0 ").PadLeft(2, ' '));
+            for (int i = 1; i < NUMBER_OF_CELL_PER_PLAYER; i++)
+            {
+                Console.Write("    ");
+            }
+            Console.Write(LargeStones[0] + "+");
+            Console.WriteLine(Board[NUMBER_OF_CELL_PER_PLAYER * 2 - 1]);
+            Console.Write("    ");
+            for (int i = 1; i < NUMBER_OF_CELL_PER_PLAYER; i++)
+            {
+                Console.Write(Board[i + NUMBER_OF_CELL_PER_PLAYER].ToString("0 ").PadLeft(4, ' '));
+            }
+            Console.WriteLine();
+            Console.WriteLine("---------------------------");
+            Console.WriteLine("Current Player: " + CurrentPlayer);
+            Console.WriteLine("Player 0: " + Players[0].SmallStones + "-" + Players[0].LargeStones + " | " + Players[0].Scores);
+            Console.WriteLine("Player 1: " + Players[1].SmallStones + "-" + Players[1].LargeStones + " | " + Players[1].Scores);
         }
     }
 }

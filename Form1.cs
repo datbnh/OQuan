@@ -328,7 +328,7 @@ namespace OAnQuan
                 labelInstruction.Text = winner + " " + win2;
             else // 25 45
                 labelInstruction.Text = winner + " " + win3;
-                        
+
             MessageBox.Show(labelInstruction.Text + Environment.NewLine + score, "Tàn Cuộc",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -403,7 +403,7 @@ namespace OAnQuan
         #endregion Game State
 
         #region ToolStripButtons
-        
+
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
             Game.IsCollectingImatureMandarinAllowed = !Game.IsCollectingImatureMandarinAllowed;
@@ -437,5 +437,44 @@ namespace OAnQuan
         }
 
         #endregion
+
+        private void toolStripButton5_Click(object sender, EventArgs e)
+        {
+            if (timerScatter.Interval >= 500)
+            {
+                timerScatter.Interval = 10;
+                toolStripButton5.Text = "Tức thời";
+            }
+            else if (timerScatter.Interval >= 10 && timerScatter.Interval < 150)
+            {
+                timerScatter.Interval = 150;
+                toolStripButton5.Text = "Nhanh";
+            }
+            else if (timerScatter.Interval >= 150 && timerScatter.Interval < 250)
+            {
+                timerScatter.Interval = 250;
+                toolStripButton5.Text = "Vừa";
+            }
+            else
+            {
+                timerScatter.Interval = 500;
+                toolStripButton5.Text = "Chậm";
+            }
+        }
+
+        private void toolStripButton6_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Ô Quan phiên bản thử nghiệm (8/04/2020)"
+                + Environment.NewLine
+                + "Phát triển bởi Dat Bui (Augustine Bùi Nhã Đạt)"
+                + Environment.NewLine
+                + Environment.NewLine
+                + "Cảm ơn bạn đã chơi thử."
+                + Environment.NewLine
+                + "Mọi góp ý xin gửi về"
+                + Environment.NewLine
+                + "datbnh[at]gmail[dot]com.",
+                "Về Ô Quan", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
     }
 }

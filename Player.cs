@@ -7,7 +7,7 @@ namespace OAnQuan
         public int SmallStones;
         public int LargeStones;
 
-        public int Scores => SmallStones + LargeStones * 10;
+        public int Scores => SmallStones * Game.SMALL_STONE_VALUE + LargeStones * Game.LARGE_STONE_VALUE;
 
         internal Player Clone()
         {

@@ -24,6 +24,9 @@ namespace OAnQuan
         public int PlayerNumber;
         public Player[] Players;
         public int SelectedCellIndex;
+        /// <summary>
+        /// Stones to be scatted in one picking-up - scattering sequence.
+        /// </summary>
         public int StonesInHand;
 
         public Status State { get; private set; }
@@ -44,10 +47,11 @@ namespace OAnQuan
             NEW = 0,
             PLAYER_SELECTING = 1,
             PLAYER_MOVING = 2,
-            WAITING_FOR_FINAL_COLLECTION = 3,
-            OVER = 4,
-            WAITING_FOR_REFILLING = 5,
+            WAITING_FOR_REFILLING = 3,
+            WAITING_FOR_FINAL_COLLECTION = 4,
+            OVER = 5,
         }
+
 
         public void BeginMove()
         {
@@ -72,21 +76,21 @@ namespace OAnQuan
         {
             var clonedGame = new Game()
             {
-                PlayerNumber = this.PlayerNumber,
-                Board = (int[])this.Board.Clone(),
-                LargeStones = (int[])this.LargeStones.Clone(),
-                CurrentCellIndex = this.CurrentCellIndex,
-                SelectedCellIndex = this.SelectedCellIndex,
-                CurrentPlayer = this.CurrentPlayer,
-                IsCollectingImatureMandarinAllowed = this.IsCollectingImatureMandarinAllowed,
-                IsPlayerMoving = this.IsPlayerMoving,
-                StonesInHand = this.StonesInHand,
+                PlayerNumber = PlayerNumber,
+                Board = (int[])Board.Clone(),
+                LargeStones = (int[])LargeStones.Clone(),
+                CurrentCellIndex = CurrentCellIndex,
+                SelectedCellIndex = SelectedCellIndex,
+                CurrentPlayer = CurrentPlayer,
+                IsCollectingImatureMandarinAllowed = IsCollectingImatureMandarinAllowed,
+                IsPlayerMoving = IsPlayerMoving,
+                StonesInHand = StonesInHand,
             };
 
             clonedGame.Players = new Player[clonedGame.PlayerNumber];
             for (int i = 0; i < clonedGame.PlayerNumber; i++)
             {
-                clonedGame.Players[i] = this.Players[i].Clone();
+                clonedGame.Players[i] = Players[i].Clone();
             }
             return clonedGame;
         }
@@ -103,7 +107,7 @@ namespace OAnQuan
                 {
                     if (IsCollectingImatureMandarinAllowed // "ăn quan non"
                         ||
-                       (LargeStones[CellIndexToLargeStoneIndex(secondNextCellIndex)] > 0 || Board[secondNextCellIndex] > 5))
+                       (GetQuanCellValue(secondNextCellIndex) >= QUAN_NON_THRESHOLD))
                     {
                         Players[CurrentPlayer].LargeStones +=
                             LargeStones[CellIndexToLargeStoneIndex(secondNextCellIndex)];
@@ -276,6 +280,7 @@ namespace OAnQuan
                 Board[playerIndex * NUMBER_OF_CELL_PER_PLAYER] * SMALL_STONE_VALUE;
         }
 
+#if DEBUG
         public void PrintBoard()
         {
             Console.WriteLine("---------------------------");
@@ -304,5 +309,6 @@ namespace OAnQuan
             Console.WriteLine("Player 0: " + Players[0].SmallStones + "-" + Players[0].LargeStones + " | " + Players[0].Scores);
             Console.WriteLine("Player 1: " + Players[1].SmallStones + "-" + Players[1].LargeStones + " | " + Players[1].Scores);
         }
+#endif
     }
 }

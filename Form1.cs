@@ -7,76 +7,89 @@ namespace OAnQuan
 {
     public partial class Form1 : Form
     {
+        private int computerIndex = 1; // assign -1 for 2 palyers mode
         public Game Game;
 
-        private Button[] Board;
-        private int distributeTimerCounter;
-        private int finalCollecTimerCounter;
-        private Color player1Color = Color.LightBlue;
-        private Color player2Color = Color.MistyRose;
+        private readonly Button[] board;
+        private readonly Label[] collectedLargeStonesNumericLabels;
 
-        private string[] playerNames;
+        private readonly Label[] collectedLargeStonesSymbolicLabels;
+
+        private readonly Label[] collectedSmallStonesNumericLabels;
+
+        private readonly Label[] collectedSmallStonesSymbolicLabels;
+
+        private readonly Color[] playerColors
+                                            = { Color.LightBlue, Color.MistyRose };
+        private readonly string[] playerNames;
+        private readonly Label[] scoreLabels;
+
+        private int counterFinalCollectTimer;
+        private int counterRefillTimer;
+
+        private bool isCollectingImatureMandarinAllowed = false;
+
+        private readonly string win3 = "thắng cực đậm!";
+        private readonly string win2 = "thắng đậm!";
+        private readonly string win1 = "thắng suýt soát!";
+
+
         public Form1()
         {
             InitializeComponent();
             playerNames = new string[2] { "Bên Xanh", "Bên Đỏ" };
-            Board = new Button[12] {button1, button2, button3, button4, button5, button6,
+            board = new Button[12] {button1, button2, button3, button4, button5, button6,
             button7, button8, button9, button10, button11, button12};
-            SetGame(new Game() { CurrentPlayer = 1 });
-            GameModelToUI();
+            collectedSmallStonesNumericLabels = new Label[2] { label22, label20 };
+            collectedSmallStonesSymbolicLabels = new Label[2] { label3, label12 };
+            collectedLargeStonesNumericLabels = new Label[2] { label23, label21 };
+            collectedLargeStonesSymbolicLabels = new Label[2] { label5, label13 };
+            scoreLabels = new Label[2] { label7, label9 };
 
+            NewGame();
+
+
+
+            UpdateAllUIElementsFromGameModel();
             //label17.Text = GameAI.PredictBestMove(Game, 2) + "";
         }
 
-        public void GameModelToUI()
+
+
+
+        public void UpdateAllUIElementsFromGameModel()
         {
             if (Game == null)
                 return;
 
+            UpdateScore(0);
+            UpdateScore(1);
+            UpdateBoard();
 
-            var v = Game.Players[0].SmallStones;
-            label3.Text = SmallStonesToString(Math.Abs(v));
-            label22.Text = (v < 0 ? "Nợ " : "") + Math.Abs(v).ToString();
+            UpdateCurrentPlayerState();
+            HighlightActiveBoardCell();
 
-            v = Game.Players[0].LargeStones;
-            label5.Text = v > 0 ? "•" : "";
-            label23.Text = v.ToString();
-            label7.Text = Game.Players[0].Scores.ToString();
-
-            v = Game.Players[1].SmallStones;
-            label12.Text = SmallStonesToString(Math.Abs(v));
-            label20.Text = (v < 0 ? "Nợ " : "") + Math.Abs(v).ToString();
-
-            v = Game.Players[1].LargeStones;
-            label13.Text = v > 0 ? "•" : "";
-            label21.Text = v.ToString();
-            label9.Text = Game.Players[1].Scores.ToString();
-
-            v = Game.StonesInHand;
-            label16.Text = SmallStonesToString(v) + " " + v.ToString();
-
-            for (int i = 0; i < Board.Length; i++)
-            {
-                Board[i].Text = SmallStonesToString(Game.Board[i]);// StonesToString(Game.Board[i], '•');
-            }
-
-            Board[0].Text = Game.LargeStones[0] > 0 ? "•" : "" + Board[0].Text;
-            Board[6].Text = Game.LargeStones[1] > 0 ? "•" : "" + Board[6].Text;
-
-            if (Game.CurrentPlayer == 0)
-            {
-                tableLayoutPanel1.BackColor = player1Color;
-                tableLayoutPanel2.BackColor = this.BackColor;
-            }
-            else
-            {
-                tableLayoutPanel1.BackColor = this.BackColor;
-                tableLayoutPanel2.BackColor = player2Color;
-            }
-
-            label18.Text = playerNames[Game.CurrentPlayer] + " Đi";
             UpdateGameState();
-            UpdateHighlightedCell();
+        }
+
+        public void HighlightActiveBoardCell()
+        {
+            for (int i = 0; i < board.Length; i++)
+            {
+                if (i == Game.SelectedCellIndex && !Game.IsPlayerMoving)
+                {
+                    board[i].BackColor = playerColors[Game.CurrentPlayer];
+                }
+                else
+                if (i == Game.CurrentCellIndex)
+                {
+                    board[i].BackColor = playerColors[Game.CurrentPlayer];
+                }
+                else
+                {
+                    board[i].BackColor = Color.White;
+                }
+            }
         }
 
         public void SetGame(Game game)
@@ -84,128 +97,82 @@ namespace OAnQuan
             Game = game;
         }
 
-        public void UpdateHighlightedCell()
+        private void boardCell_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < Board.Length; i++)
+            for (int i = 0; i < board.Length; i++)
             {
-                if (i == Game.SelectedCellIndex && !Game.IsPlayerMoving)
+                if (board[i] == sender && ((i != 0) && (i != 6)))
                 {
-                    if (Game.CurrentPlayer == 0)
-                        Board[i].BackColor = player1Color;
-                    else
-                        Board[i].BackColor = player2Color;
-                }
-                else
-                if (i == Game.CurrentCellIndex)
-                {
-                    if (Game.CurrentPlayer == 0)
-                        Board[i].BackColor = player1Color;
-                    else
-                        Board[i].BackColor = player2Color;
-                }
-                else
-                {
-                    Board[i].BackColor = Color.White;
+                    Game.SelectCell(i);
+                    break;
                 }
             }
+
+            HighlightActiveBoardCell();
         }
 
-        private void button10_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(9);
-            UpdateHighlightedCell();
-        }
-
-        private void button11_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(10);
-            UpdateHighlightedCell();
-        }
-
-        private void button12_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(11);
-            UpdateHighlightedCell();
-        }
-
-        private void button13_Click(object sender, EventArgs e)
+        private void buttonGoOrNew_Click(object sender, EventArgs e)
         {
             if (Game.State == Game.Status.OVER)
             {
-                Game = new Game();
-                GameModelToUI();
+                NewGame();
                 return;
             }
 
             Game.BeginMove();
-            timer1.Enabled = true;
-            timer1.Start();
+            timerScatter.Enabled = true;
+            timerScatter.Start();
         }
 
-        private void button14_Click_1(object sender, EventArgs e)
+        private void NewGame()
         {
+            Random random = new Random();
+            SetGame(new Game() { CurrentPlayer = random.Next(0, 2), IsCollectingImatureMandarinAllowed = isCollectingImatureMandarinAllowed, });
+            if (Game.IsCollectingImatureMandarinAllowed)
+                toolStripButton2.Text = "Được Ăn Quan Non";
+            else
+                toolStripButton2.Text = "Không Được Ăn Quan Non";
+            UpdateAllUIElementsFromGameModel();
+            if (Game.CurrentPlayer == computerIndex)
+                ComputerGo();
+        }
+
+        private void buttonRefill_Click_1(object sender, EventArgs e)
+        {
+            timerRefill.Stop();
             RefillNow();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void UpdateCurrentPlayerState()
         {
-            Game.SelectCell(1);
-            UpdateHighlightedCell();
-        }
+            if (Game.State == Game.Status.OVER)
+            {
+                tableLayoutPanelPlayer0.BackColor = this.BackColor;
+                tableLayoutPanelPlayer1.BackColor = this.BackColor;
+                return;
+            }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(2);
-            UpdateHighlightedCell();
-        }
+            labelGameState.Text = playerNames[Game.CurrentPlayer] + " Đi";
 
-        private void button4_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(3);
-            UpdateHighlightedCell();
-        }
-
-        private void button5_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(4);
-            UpdateHighlightedCell();
-        }
-
-        private void button6_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(5);
-            UpdateHighlightedCell();
-        }
-
-        private void button8_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(7);
-            UpdateHighlightedCell();
-        }
-
-        private void button9_Click(object sender, EventArgs e)
-        {
-            Game.SelectCell(8);
-            UpdateHighlightedCell();
+            if (Game.CurrentPlayer == 0)
+            {
+                tableLayoutPanelPlayer0.BackColor = playerColors[Game.CurrentPlayer];
+                tableLayoutPanelPlayer1.BackColor = this.BackColor;
+            }
+            else
+            {
+                tableLayoutPanelPlayer0.BackColor = this.BackColor;
+                tableLayoutPanelPlayer1.BackColor = playerColors[Game.CurrentPlayer];
+            }
         }
 
         private void RefillNow()
         {
-            button14.Visible = false;
+            buttonRefill.Visible = false;
             Game.Refill(Game.CurrentPlayer);
-            button13.Enabled = true;
-            GameModelToUI();
+            buttonGoOrNew.Enabled = true;
+            UpdateAllUIElementsFromGameModel();
         }
-
-        //private string StonesToString(int numberOfStones, char symbol, bool addSpace = false, bool addNumericValue = false)
-        //{
-        //    var output = "".PadRight(Math.Abs(numberOfStones), symbol);
-        //    output = (addNumericValue ? "(" + Math.Abs(numberOfStones) + ") " : "") + output;
-        //    output = (numberOfStones < 0 ? "Nợ " : "") + output;
-        //    if (addSpace)
-        //        return output.Replace(symbol + "", symbol + " ");
-        //    return output;
-        //}
 
         private string SmallStonesToString(int numberOfStones)
         {
@@ -238,26 +205,132 @@ namespace OAnQuan
             return sb.ToString();
         }
 
+        private void timerScatter_Tick(object sender, EventArgs e)
+        {
+            Game.Step();
+            UpdateBoard();
+            HighlightActiveBoardCell();
+            labelStonesInHand.Text = Game.StonesInHand.ToString() + " " + "".PadLeft(Game.StonesInHand, '.');
+
+            if (!Game.IsPlayerMoving)
+            {
+                labelStonesInHand.Text = "-";
+                timerScatter.Stop();
+                UpdateScore(0);
+                UpdateScore(1);
+                UpdateCurrentPlayerState();
+
+                UpdateGameState();
+            }
+        }
+
+        private void ComputerGo()
+        {
+            labelInstruction.Text = "Máy đang tính kế...";
+
+            Random random = new Random();
+
+            var v = GameAI.PredictBestMove(Game, computerIndex);
+            bool valid = Game.SelectCell(v);
+
+            while (!valid)
+            {
+                v = random.Next(1 + computerIndex * Game.NUMBER_OF_CELL_PER_PLAYER,
+                    (computerIndex + 1) * Game.NUMBER_OF_CELL_PER_PLAYER);
+                valid = Game.SelectCell(v);
+            }
+
+            timerDelayComputerMove.Interval = random.Next(1000, 3000);
+            label17.Text = timerDelayComputerMove.Interval.ToString();
+            Cursor = Cursors.WaitCursor;
+            timerDelayComputerMove.Start();
+        }
+
+        private void timerRefill_Tick(object sender, EventArgs e)
+        {
+            counterRefillTimer++;
+            buttonRefill.Text = "Đặt Lại Quân" + Environment.NewLine + "" +
+                "(" + (3 - counterRefillTimer) + " s)";
+            if (counterRefillTimer >= 3)
+            {
+                RefillNow();
+                timerRefill.Stop();
+            }
+        }
+
+        private void timerFinalCollect_Tick(object sender, EventArgs e)
+        {
+            counterFinalCollectTimer++;
+            labelInstruction.Text = "(" + (3 - counterFinalCollectTimer) + " s)";
+            if (counterFinalCollectTimer >= 3)
+            {
+                timerFinalCollect.Stop();
+                Game.FinalCollect();
+                UpdateAllUIElementsFromGameModel();
+            }
+        }
+
+        private void timerDelayComputerMove_Tick(object sender, EventArgs e)
+        {
+            Cursor = Cursors.Default;
+            labelInstruction.Text = "Máy đang điều quân...";
+            HighlightActiveBoardCell();
+            Game.BeginMove();
+            timerDelayComputerMove.Stop();
+            timerScatter.Start();
+        }
+
+        private void UpdateBoard()
+        {
+            for (int i = 0; i < board.Length; i++)
+            {
+                board[i].Text = SmallStonesToString(Game.Board[i]);
+            }
+
+            board[0].Text = (Game.LargeStones[0] > 0 ? "•" : "") + board[0].Text;
+            board[6].Text = (Game.LargeStones[1] > 0 ? "•" : "") + board[6].Text;
+        }
+
+        private void UpdateScore(int playerIndex)
+        {
+            var v = Game.Players[playerIndex].SmallStones;
+
+            collectedSmallStonesSymbolicLabels[playerIndex].Text
+                = SmallStonesToString(Math.Abs(v));
+            collectedSmallStonesNumericLabels[playerIndex].Text
+                = (v < 0 ? "Nợ " : "") + Math.Abs(v).ToString();
+
+            v = Game.Players[playerIndex].LargeStones;
+            collectedLargeStonesSymbolicLabels[playerIndex].Text = v > 0 ? ("".PadLeft(v, '•')) : "";
+            collectedLargeStonesNumericLabels[playerIndex].Text = v.ToString();
+
+            scoreLabels[playerIndex].Text = Game.Players[playerIndex].Scores.ToString();
+        }
+
         #region Game State
 
         private void GameOver()
         {
-            button13.Text = "Đánh Trận Mới";
-            label18.Text = "Tàn cuộc!";
-            label19.Text = (Game.Players[0].Scores > Game.Players[1].Scores)
-                ? playerNames[0] + " thắng!"
-                : (Game.Players[0].Scores == Game.Players[1].Scores)
-                ? "Hòa" : playerNames[1] + " thắng!";
-            MessageBox.Show(label19.Text, "Tàn Cuộc",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
+            buttonGoOrNew.Text = "Đánh Trận Mới";
+            labelGameState.Text = "Tàn cuộc!";
 
-        private void NewGame()
-        {
-            button13.Text = "Điều Quân";
-            label18.Text = "Khai cuộc!";
-            label19.Text = playerNames[Game.CurrentPlayer] + " đi trước." + Environment.NewLine +
-                "Chọn một mẫu ruộng để điều quân.";
+            string winner =
+                (Game.Players[0].Scores > Game.Players[1].Scores) ?
+                playerNames[0] : playerNames[1];
+            var delta = Math.Abs(Game.Players[0].Scores - Game.Players[1].Scores);
+            string score = playerNames[0] + " " + Game.Players[0].Scores + " : " +
+                Game.Players[1].Scores + " " + playerNames[1];
+            if (delta <= 0)
+                labelInstruction.Text = "Đôi bên ngang tài!";
+            else if (delta <= 5) // 70 / 2 = 35 -> 32 38
+                labelInstruction.Text = winner + " " + win1;
+            else if (delta <= 10) // 30 40
+                labelInstruction.Text = winner + " " + win2;
+            else // 25 45
+                labelInstruction.Text = winner + " " + win3;
+                        
+            MessageBox.Show(labelInstruction.Text + Environment.NewLine + score, "Tàn Cuộc",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void UpdateGameState()
@@ -265,18 +338,30 @@ namespace OAnQuan
             switch (Game.State)
             {
                 case Game.Status.NEW:
-                    NewGame();
+                    buttonGoOrNew.Text = "Điều Quân";
+                    labelGameState.Text = "Khai cuộc!";
+                    labelInstruction.Text = playerNames[Game.CurrentPlayer] + " đi trước." + Environment.NewLine +
+                        "Chọn một mẫu ruộng để điều quân.";
                     break;
 
                 case Game.Status.PLAYER_SELECTING:
-                    label19.Text = playerNames[Game.CurrentPlayer] + " chọn một mẫu ruộng để điều quân.";
+                    labelInstruction.Text
+                        = playerNames[Game.CurrentPlayer]
+                        + " chọn một mẫu ruộng để điều quân.";
+                    if (Game.CurrentPlayer == computerIndex)
+                        ComputerGo();
                     break;
 
                 case Game.Status.PLAYER_MOVING:
-                    label19.Text = playerNames[Game.CurrentPlayer] + " đang điều quân...";
+                    labelInstruction.Text
+                        = playerNames[Game.CurrentPlayer]
+                        + " đang điều quân...";
                     break;
 
                 case Game.Status.WAITING_FOR_FINAL_COLLECTION:
+                    //if (Game.CurrentPlayer == computerIndex)
+                    //    RefillNow();
+                    //else
                     WaitForFinalCollection();
                     break;
 
@@ -289,64 +374,68 @@ namespace OAnQuan
                     break;
 
                 default:
-                    label19.Text = "Undefined";
+                    labelInstruction.Text = "Undefined";
                     break;
             }
         }
 
         private void WaitForFinalCollection()
         {
-            label18.Text = "Hết quan, tàn dân, " + Environment.NewLine + "thu quân, bán ruộng!";
-            label19.Text = "(3 s)";
-            finalCollecTimerCounter = 0;
-            timer3.Enabled = true;
-            timer3.Start();
+            labelGameState.Text = "Hết quan, tàn dân, "
+                + Environment.NewLine + "thu quân, bán ruộng!";
+            labelInstruction.Text = "(3 s)";
+            counterFinalCollectTimer = 0;
+            timerFinalCollect.Enabled = true;
+            timerFinalCollect.Start();
         }
         private void WaitForRefilling()
         {
-            label19.Text = playerNames[Game.CurrentPlayer] + " đã hết quân." + Environment.NewLine + "Đặt lại quân vào ruộng để đi tiếp.";
-            button14.Text = "Đặt Lại Quân" + Environment.NewLine + "(3 s)";
-            button14.Visible = true;
-            button13.Enabled = false;
-            distributeTimerCounter = 0;
-            timer2.Enabled = true;
-            timer2.Start();
+            labelInstruction.Text = playerNames[Game.CurrentPlayer] + " đã hết quân."
+                + Environment.NewLine + "Đặt lại quân vào ruộng để đi tiếp.";
+            buttonRefill.Text = "Đặt Lại Quân" + Environment.NewLine + "(3 s)";
+            buttonRefill.Visible = true;
+            buttonGoOrNew.Enabled = false;
+            counterRefillTimer = 0;
+            timerRefill.Enabled = true;
+            timerRefill.Start();
         }
 
         #endregion Game State
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            Game.Step();
-            GameModelToUI();
-            if (!Game.IsPlayerMoving)
-            {
-                timer1.Stop();
-                //label17.Text = GameAI.PredictBestMove(Game, 2) + "";
-            }
 
-        }
-        private void timer2_Tick(object sender, EventArgs e)
+        #region ToolStripButtons
+        
+        private void toolStripButton2_Click(object sender, EventArgs e)
         {
-            distributeTimerCounter++;
-            button14.Text = "Đặt Lại Quân" + Environment.NewLine + "" +
-                "(" + (3 - distributeTimerCounter) + " s)";
-            if (distributeTimerCounter >= 3)
-            {
-                RefillNow();
-                timer2.Stop();
-            }
+            Game.IsCollectingImatureMandarinAllowed = !Game.IsCollectingImatureMandarinAllowed;
+            isCollectingImatureMandarinAllowed = Game.IsCollectingImatureMandarinAllowed;
+            if (Game.IsCollectingImatureMandarinAllowed)
+                toolStripButton2.Text = "Được Ăn Quan Non";
+            else
+                toolStripButton2.Text = "Không Được Ăn Quan Non";
         }
 
-        private void timer3_Tick(object sender, EventArgs e)
+        private void toolStripButton1_Click(object sender, EventArgs e)
         {
-            finalCollecTimerCounter++;
-            label19.Text = "(" + (3 - finalCollecTimerCounter) + " s)";
-            if (finalCollecTimerCounter >= 3)
-            {
-                timer3.Stop();
-                Game.FinalCollect();
-                GameModelToUI();
-            }
+            if (MessageBox.Show("Bạn có chắc là muốn đánh trận mới?", "Đánh Trận Mới", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                NewGame();
         }
+
+        private void toolStripButton3_Click(object sender, EventArgs e)
+        {
+            if (computerIndex > -1)
+            {
+                toolStripButton3.Text = "Hai Người Chơi";
+                computerIndex = -1;
+            }
+            else
+            {
+                toolStripButton3.Text = "Một Người Chơi";
+                computerIndex = 1;
+            }
+            if (MessageBox.Show("Bạn vừa thay đổi cài đặt. Bạn có muốn đánh trận mới không?", "Đánh Trận Mới", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                NewGame();
+        }
+
+        #endregion
     }
 }

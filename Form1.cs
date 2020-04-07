@@ -76,7 +76,7 @@ namespace OAnQuan
         {
             for (int i = 0; i < board.Length; i++)
             {
-                if (i == Game.SelectedCellIndex && !Game.IsPlayerMoving)
+                if (i == Game.SelectedCellIndex && Game.State != Game.Status.PLAYER_MOVING)
                 {
                     board[i].BackColor = playerColors[Game.CurrentPlayer];
                 }
@@ -127,7 +127,7 @@ namespace OAnQuan
         private void NewGame()
         {
             Random random = new Random();
-            SetGame(new Game() { CurrentPlayer = random.Next(0, 2), IsCollectingImatureMandarinAllowed = isCollectingImatureMandarinAllowed, });
+            SetGame(new Game(random.Next(0, 2)) { IsCollectingImatureMandarinAllowed = isCollectingImatureMandarinAllowed, });
             if (Game.IsCollectingImatureMandarinAllowed)
                 toolStripButton2.Text = "Được Ăn Quan Non";
             else
@@ -212,7 +212,7 @@ namespace OAnQuan
             HighlightActiveBoardCell();
             labelStonesInHand.Text = Game.StonesInHand.ToString() + " " + "".PadLeft(Game.StonesInHand, '.');
 
-            if (!Game.IsPlayerMoving)
+            if (Game.State != Game.Status.PLAYER_MOVING)
             {
                 labelStonesInHand.Text = "-";
                 timerScatter.Stop();

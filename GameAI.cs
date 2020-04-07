@@ -28,11 +28,11 @@ namespace OAnQuan
 
         private static int predictBestMove(ref Game baseline, ref Game currentTrial, ref int currentDoT)
         {
-            Console.WriteLine();
-            Console.WriteLine("Current Depth of Though: " + currentDoT);
+            //Console.WriteLine();
+            //Console.WriteLine("Current Depth of Though: " + currentDoT);
             if (currentDoT <= 0)
             {
-                Console.WriteLine("Best Move: ");
+                //Console.WriteLine("Best Move: ");
                 return predictBestMove(ref baseline, ref currentTrial);
             }
 
@@ -41,10 +41,10 @@ namespace OAnQuan
                 currentTrial.PerformCompleteMove(
                     predictBestMove(ref baseline, ref currentTrial));
                 currentDoT--;
-                Console.WriteLine("Initial Game:");
-                baseline.PrintBoard();
-                Console.WriteLine("This Trial:");
-                currentTrial.PrintBoard();
+                //Console.WriteLine("Initial Game:");
+                //baseline.PrintBoard();
+                //Console.WriteLine("This Trial:");
+                //currentTrial.PrintBoard();
                 return predictBestMove(ref baseline, ref currentTrial, ref currentDoT);
             }
 
@@ -52,19 +52,19 @@ namespace OAnQuan
 
         private static int predictBestMove(ref Game baseline, ref Game currentTrial)
         {
-            Console.WriteLine("Getting best move of currentTrial...");
-            Console.WriteLine("baseline:");
-            baseline.PrintBoard();
-            Console.WriteLine("currentTrial:");
-            currentTrial.PrintBoard();
-            Console.WriteLine();
+            //Console.WriteLine("Getting best move of currentTrial...");
+            //Console.WriteLine("baseline:");
+            //baseline.PrintBoard();
+            //Console.WriteLine("currentTrial:");
+            //currentTrial.PrintBoard();
+            //Console.WriteLine();
             var delta10s = new int[Game.NUMBER_OF_CELL_PER_PLAYER - 1];
             for (int i = 1; i < Game.NUMBER_OF_CELL_PER_PLAYER; i++)
             {
-                Console.WriteLine("i = " + i);
+                //Console.WriteLine("i = " + i);
                 var clonedGame = currentTrial.Clone();
                 clonedGame.PerformCompleteMove(i + Game.NUMBER_OF_CELL_PER_PLAYER * clonedGame.CurrentPlayer);
-                clonedGame.PrintBoard();
+                //clonedGame.PrintBoard();
                 delta10s[i - 1] = GetDelta10(baseline, clonedGame);
             }
 
@@ -75,18 +75,18 @@ namespace OAnQuan
 
             var max = int.MinValue;
             var maxIndex = -1;
-            Console.WriteLine();
-            Console.WriteLine("Scoring:");
+            //Console.WriteLine();
+            //Console.WriteLine("Scoring:");
             for (int i = 1; i < delta10s.Length + 1; i++)
             {
-                Console.WriteLine((i + Game.NUMBER_OF_CELL_PER_PLAYER * currentTrial.CurrentPlayer) + ": " + delta10s[i - 1] * sign);
+                //Console.WriteLine((i + Game.NUMBER_OF_CELL_PER_PLAYER * currentTrial.CurrentPlayer) + ": " + delta10s[i - 1] * sign);
                 if ((sign * delta10s[i - 1]) > max)
                 {
                     max = sign * delta10s[i - 1];
                     maxIndex = i;
                 }
             }
-            Console.WriteLine("Best move: " + (maxIndex + Game.NUMBER_OF_CELL_PER_PLAYER * currentTrial.CurrentPlayer));
+            //Console.WriteLine("Best move: " + (maxIndex + Game.NUMBER_OF_CELL_PER_PLAYER * currentTrial.CurrentPlayer));
 
             return maxIndex + Game.NUMBER_OF_CELL_PER_PLAYER * currentTrial.CurrentPlayer;
         }
@@ -148,9 +148,9 @@ namespace OAnQuan
 
         public static Game PerformCompleteMove(this Game game, int cellIndex)
         {
-            Console.WriteLine("  Performing move: " + cellIndex);
-            Console.WriteLine("  CurrentPlayer  : " + game.CurrentPlayer);
-            Console.Write("  ");
+            //Console.WriteLine("  Performing move: " + cellIndex);
+            //Console.WriteLine("  CurrentPlayer  : " + game.CurrentPlayer);
+            //Console.Write("  ");
             //game.PrintBoard();
             if (game.State == Game.Status.WAITING_FOR_REFILLING)
                 game.Refill(game.CurrentPlayer);
@@ -160,15 +160,15 @@ namespace OAnQuan
                 do
                 {
                     game.Step();
-                    Console.Write(".");
+                    //Console.Write(".");
                 }
                 while (game.State == Game.Status.PLAYER_MOVING);
                 
                 if (game.State == Game.Status.WAITING_FOR_FINAL_COLLECTION)
                     game.FinalCollect();
             }
-            Console.WriteLine();
-            Console.WriteLine("  CurrentPlayer  : " + game.CurrentPlayer);
+            //Console.WriteLine();
+            //Console.WriteLine("  CurrentPlayer  : " + game.CurrentPlayer);
             return game;
         }
     }
